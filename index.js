@@ -37,14 +37,26 @@ app.post('/api/deepseek', async (req, res) => {
   }
 });
 
-// Route Gemini
+// Route Gemini corrigée
 app.post('/api/gemini', async (req, res) => {
   try {
+    const userMessage = req.body.userMessage;
+
+    if (!userMessage) {
+      return res.status(400).json({ error: "Le champ userMessage est requis." });
+    }
+
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${process.env.GEMINI_API_KEY}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: req.body.contents
+        contents: [
+          {
+            parts: [
+              { text: userMessage }
+            ]
+          }
+        ]
       })
     });
 
@@ -62,9 +74,11 @@ app.post('/api/gemini', async (req, res) => {
   }
 });
 
-// Route OpenRouter avec DeepSeek
+// Route OpenRouter avec DeepSeek corrigée
 app.post('/api/openrouter', async (req, res) => {
   try {
+    console.log("Clé OpenRouter côté serveur :", process.env.OPENROUTER_API_KEY);
+
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -91,6 +105,11 @@ app.post('/api/openrouter', async (req, res) => {
     console.error("Exception OpenRouter :", error);
     res.status(500).json({ error: "Erreur OpenRouter" });
   }
+});
+
+// Petite route de test
+app.get('/', (req, res) => {
+  res.send("Backend OS AI en ligne !");
 });
 
 app.listen(PORT, () => {
